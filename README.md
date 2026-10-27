@@ -25,7 +25,7 @@ LG TVs: [Ostromo for LG](https://github.com/Staiola/Ostromo-for-LG).
 
 ## Try it
 
-Version 0.10.0 is a beta, and the first for Android TV. It runs on TVs and boxes with Android TV or Google TV
+Version 0.10.1 is a beta, and the second for Android TV: streaming tiles now find their app by package name. It runs on TVs and boxes with Android TV or Google TV
 (TCL, Sony, Philips, Hisense, Chromecast with Google TV, Google TV Streamer, Nvidia Shield …), Android 8 or
 newer. Tested on the Google TV emulator and a Pixel so far, not yet on a real TV:
 [tell me how it runs on yours](https://github.com/Staiola/Ostromo-for-Android-TV/issues). It's free.
