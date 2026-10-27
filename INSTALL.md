@@ -25,7 +25,7 @@ words in **bold**.
 4. **Fetch Ostromo.** Open Downloader, select the address field and type:
 
    ```text
-   staiola.studio/tv
+   staiola.studio/android-tv
    ```
 
    Press **Go**. It downloads the newest version.
@@ -53,7 +53,7 @@ What to expect:
 
 ## Updating
 
-Do step 4 and 5 again: Downloader, `staiola.studio/tv`, Install. It installs over the old version and keeps
+Do step 4 and 5 again: Downloader, `staiola.studio/android-tv`, Install. It installs over the old version and keeps
 your setup.
 
 ## Removing it
@@ -66,7 +66,7 @@ afterwards.
 [Open an issue](https://github.com/Staiola/Ostromo-for-Android-TV/issues) and say which TV or box you have.
 
 - **"App not installed":** an older Ostromo, signed differently, is already on the TV. Uninstall it first.
-- **Downloader shows a web page instead of downloading:** check the address. `staiola.studio/tv` sends you on
+- **Downloader shows a web page instead of downloading:** check the address. `staiola.studio/android-tv` sends you on
   to the app file on GitHub; the full address is
   `https://github.com/Staiola/Ostromo-for-Android-TV/releases/latest/download/ostromo-android-tv.apk`.
 

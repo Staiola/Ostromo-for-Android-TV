@@ -8,7 +8,7 @@
 
 1. **On the TV:** turn on developer options, install the free **Downloader** app from the Play Store and let it
    install apps.
-2. **In Downloader,** type `staiola.studio/tv`, press Go and install.
+2. **In Downloader,** type `staiola.studio/android-tv`, press Go and install.
 3. **Open Ostromo** and pick your apps, airport and power prices in SETUP.
 
 Only the TV and its remote, no computer. Step by step: **[the install guide](INSTALL.md)**.
