@@ -8,12 +8,10 @@
 
 1. **On the TV:** turn on developer options, install the free **Downloader** app from the Play Store and let it
    install apps.
-2. **In Downloader,** open
-   `https://github.com/Staiola/Ostromo-for-Android-TV/releases/latest/download/ostromo-android-tv.apk`
-   and install it.
+2. **In Downloader,** type `staiola.studio/tv`, press Go and install.
 3. **Open Ostromo** and pick your apps, airport and power prices in SETUP.
 
-Step by step, and two other ways: **[the install guide](INSTALL.md)**.
+Only the TV and its remote, no computer. Step by step: **[the install guide](INSTALL.md)**.
 
 A home screen for Android TV and Google TV that looks like the ship computers in *Alien* and *Aliens*: blue
 vector lines on black, a worn picture tube, and a boot card that plots itself on. It launches your streaming
