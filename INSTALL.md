@@ -58,15 +58,20 @@ Please install Ostromo on my Android TV.
 - Developer options and USB/network debugging are on.
 - TV IP address: <the IP>
 
-1. Use Google's adb (from Android's platform-tools; install it with my package manager if it's missing).
+1. Use Google's adb, from Android's platform-tools. If it's missing, install it with my package
+   manager (on a Mac: brew install --cask android-platform-tools; on Windows:
+   winget install Google.PlatformTools).
 2. Connect with: adb connect <IP>:5555 . The TV shows an "Allow USB debugging?" prompt: tell me to
-   accept it on the TV, then wait.
+   accept it on the TV, then wait. If adb then lists more than one device, add -s <IP>:5555 to
+   every adb command.
 3. Download https://github.com/Staiola/Ostromo-for-Android-TV/releases/latest/download/ostromo-android-tv.apk
-4. Install it with adb install -r, and start it (package com.unterface.ostromo, activity .MainActivity).
+4. Install it with adb install -r, and start it with:
+   adb shell am start -n com.unterface.ostromo/.MainActivity
 5. Tell me what you did. Don't change any other settings on the TV.
 ```
 
-Or by hand: `adb connect <IP>:5555`, accept the prompt on the TV, then `adb install -r ostromo-android-tv.apk`.
+Or by hand: `adb connect <IP>:5555`, accept the prompt on the TV, then `adb install -r ostromo-android-tv.apk`
+and start it from the apps row (or `adb shell am start -n com.unterface.ostromo/.MainActivity`).
 
 ## Using it
 
