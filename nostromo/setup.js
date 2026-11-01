@@ -61,8 +61,9 @@
     return list;
   }
 
+  // the grid has the apps first and clearing the channel last
   function openPicker(i) {
-    var list = appChoices(draft.viewing[i]);
+    var list = appChoices(draft.viewing[i]).filter(function (v) { return v !== 'none'; }).concat(['none']);
     var at = list.map(keyOf).indexOf(keyOf(draft.viewing[i]));
     picker = { i: i, list: list, at: Math.max(0, at) };
   }
@@ -286,7 +287,7 @@
       } else {
         K.box(tx, ty, tw, th, C.lineDim, 2);
       }
-      var name = a ? a.name : '-- EMPTY --';
+      var name = a ? a.name : 'LEAVE EMPTY';
       var foot = !a ? 'NO CARRIER' : a.screen ? 'BUILT IN' : a.other ? 'ON THIS TV' : 'STREAMING';
       if (keyOf(v) === cur) foot = '● NOW ON ' + r.label;
       text(a ? a.code : '--', tx + tw - 20, ty + 38, { size: 22, color: C.lineDim, spacing: 2, align: 'right', glow: false });
