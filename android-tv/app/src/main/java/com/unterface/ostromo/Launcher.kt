@@ -2,7 +2,8 @@
 // home screen makes (see K.luna in nostromo/kit.js), so home.js runs as is.
 //   listLaunchPoints -> the TV's apps, { launchPoints: [{ id, title }] }
 //   launch { id }    -> an app by package name, or com.webos.app.hdmiN
-// and leave(), for BACK on the home screen.
+// and leave(), for BACK on the home screen, and update(), to install a newer
+// release (Updater).
 package com.unterface.ostromo
 
 import android.app.Activity
@@ -32,6 +33,11 @@ class Launcher(private val activity: Activity) {
     @JavascriptInterface
     fun leave() {
         activity.runOnUiThread { activity.moveTaskToBack(true) }
+    }
+
+    @JavascriptInterface
+    fun update() {
+        activity.runOnUiThread { Updater.install(activity) }
     }
 
     private fun ok() = JSONObject().put("returnValue", true)

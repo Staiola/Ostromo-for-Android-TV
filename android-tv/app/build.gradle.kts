@@ -31,6 +31,11 @@ android {
         versionName = webVersion
         // 0.9.2 -> 902, 1.10.0 -> 11000
         versionCode = webVersion.split(".").map { it.toInt() }.let { (a, b, c) -> a * 10000 + b * 100 + c }
+        // where Updater looks for a newer release; -PupdateUrl=… points a test
+        // build somewhere else (a debug build may use http, see src/debug)
+        val updateUrl = (project.findProperty("updateUrl") as String?)
+            ?: "https://api.github.com/repos/Staiola/Ostromo-for-Android-TV/releases/latest"
+        buildConfigField("String", "UPDATE_URL", "\"$updateUrl\"")
     }
 
     signingConfigs {

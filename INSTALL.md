@@ -53,8 +53,17 @@ What to expect:
 
 ## Updating
 
-Do step 4 and 5 again: Downloader, `staiola.studio/android-tv`, Install. It installs over the old version and keeps
-your setup.
+From 0.11.0 on, Ostromo looks for a newer version when it starts. If there is one, an amber **▲ UPDATE** chip
+appears at the top of the home screen (press ↑, then ←). Press OK on it:
+
+1. The first time, the TV asks whether Ostromo may **install unknown apps**. Switch it on, press Back, and press
+   OK on the chip again.
+2. Ostromo downloads the new version and the TV asks you to confirm. Google Play Protect may warn that it hasn't
+   seen an app from this developer before: choose **More details → Install anyway**.
+3. The TV closes Ostromo to replace it. Open it again from your apps; your setup is kept.
+
+On older versions, or if you'd rather: do step 4 and 5 again (Downloader, `staiola.studio/android-tv`, Install).
+It installs over the old version and keeps your setup.
 
 ## Removing it
 
@@ -66,6 +75,8 @@ afterwards.
 [Open an issue](https://github.com/Staiola/Ostromo-for-Android-TV/issues) and say which TV or box you have.
 
 - **"App not installed":** an older Ostromo, signed differently, is already on the TV. Uninstall it first.
+- **"App blocked to protect your device" (Play Protect):** Ostromo isn't in the Play Store, so Play Protect doesn't
+  know it. Choose **More details → Install anyway**.
 - **Downloader shows a web page instead of downloading:** check the address. `staiola.studio/android-tv` sends you on
   to the app file on GitHub; the full address is
   `https://github.com/Staiola/Ostromo-for-Android-TV/releases/latest/download/ostromo-android-tv.apk`.

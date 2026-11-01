@@ -2,6 +2,7 @@
 // headers, answered on the app's own origin at the paths the Mac preview's
 // dev-server.js uses, so K.data in kit.js needs no Android branch.
 //   api/aircraft?icao=&lat=&lon=, api/eds/<dataset>?<query>, api/nyiso?day=, api/cam?id=, api/abyss, api/teletext?page=
+// and api/update, which only the Android app has (Updater)
 // WebView calls shouldInterceptRequest off the UI thread, so blocking is fine.
 package com.unterface.ostromo
 
@@ -23,6 +24,7 @@ object Api {
             path == "/api/teletext" -> Teletext.getPage(url.getQueryParameter("page")).toString()
             path == "/api/cam" -> Cams.getStill(url.getQueryParameter("id").orEmpty()).toString()
             path == "/api/abyss" -> Cams.getClip().toString()
+            path == "/api/update" -> Updater.status().toString()
             path == "/api/nyiso" -> Energy.fetchNyiso(url.getQueryParameter("day"))
             path.startsWith("/api/eds/") -> Energy.fetchDataset(path.removePrefix("/api/eds/"), url.encodedQuery.orEmpty())
             else -> return json(404, "Not Found", JSONObject().put("error", "no such api: $path").toString())

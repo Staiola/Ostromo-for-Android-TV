@@ -47,10 +47,11 @@
   var focus = { row: 0, col: 0 };
   var ghost = null; // where focus just was, for a one-frame phosphor trail
   var exec = null;  // the running EXECUTE overlay
+  var updating = null; // the update overlay, while it's open
   var bootedAt = Date.now();
 
   function itemAt(row, col) {
-    if (row < 0) return { kind: 'settings' };
+    if (row < 0) return { kind: chip() === 'update' ? 'update' : 'settings' };
     if (col < 0) return { kind: row === 0 ? 'power' : 'radar' };
     if (row < 2) {
       var a = APPS[row * COLS + col];
@@ -68,11 +69,17 @@
     return 0;
   }
 
-  // the SETUP chip, top right of the main panel; ↑ from the top row
+  // the SETUP chip, top right of the main panel; ↑ from the top row. When a
+  // newer version is out (Android), an UPDATE chip sits over the viewing
+  // tiles, just left of the dashed rule; ← and → go between the two.
   var CHIP = { x: MAIN.x + MAIN.w - PADX - 170, y: MAIN.y + 26, w: 170, h: 44 };
+  var SYS_X = GRID_X + VIEW_COLS * (TILE_W + GAP) + SPLIT;
+  var UPDATE_CHIP = { x: SYS_X - (SPLIT + GAP) / 2 - 20 - 280, y: CHIP.y, w: 280, h: 44 };
+  var chipSel = 'setup';
+  function chip() { return chipSel === 'update' && hasUpdate() ? 'update' : 'setup'; }
 
   function rectOf(row, col) {
-    if (row < 0) return CHIP;
+    if (row < 0) return chip() === 'update' ? UPDATE_CHIP : CHIP;
     if (col < 0 && row === 0) return POWER;
     if (col < 0) return { x: MINI.x - MINI.r, y: MINI.y - MINI.r, w: MINI.r * 2, h: MINI.r * 2 };
     if (row < 2) return { x: GRID_X + col * (TILE_W + GAP) + (col >= VIEW_COLS ? SPLIT : 0), y: ROW_Y[row], w: TILE_W, h: TILE_H };
@@ -84,7 +91,11 @@
     var before = rectOf(focus.row, focus.col);
     var row = focus.row, col = focus.col;
     if (dCol) {
-      if (row < 0) return;
+      if (row < 0) {
+        var to = dCol < 0 && hasUpdate() ? 'update' : 'setup';
+        if (to !== chip()) { chipSel = to; ghost = { rect: before, at: Date.now() }; }
+        return;
+      }
       if (row === 2 && col >= 0) {
         var to = inputAt(col) + dCol;
         col = to < 0 ? -1 : to >= INPUTS.length ? col : INPUT_COLS[to][0];
@@ -119,8 +130,33 @@
       .catch(function () {});
   }
 
+  // --- updating (Android: Updater.kt) ----------------------------------------
+
+  // { current, latest, newer, state, progress, error } once the app has asked
+  var update = null;
+  var CAN_UPDATE = !!(window.OstromoAndroid && window.OstromoAndroid.update);
+
+  function hasUpdate() { return !!(update && update.newer); }
+
+  function checkUpdate() {
+    if (!CAN_UPDATE) return;
+    K.data('update').then(function (u) { update = u; }).catch(function () {});
+  }
+
+  // the overlay asks how it's going until it closes
+  function startUpdate() {
+    if (!updating) updating = { at: Date.now(), poll: setInterval(checkUpdate, 600) };
+    window.OstromoAndroid.update();
+  }
+
+  function closeUpdate() {
+    if (updating) clearInterval(updating.poll);
+    updating = null;
+  }
+
   function execute(target) {
     if (target.kind === 'empty') return;
+    if (target.kind === 'update') { startUpdate(); return; }
     if (target.kind !== 'app' && target.kind !== 'input') { window.Shell.go(target.kind); return; }
     var item = target.item;
     exec = { name: item.name, id: item.id, at: Date.now(), result: null };
@@ -135,6 +171,12 @@
   }
 
   function key(code) {
+    if (updating) {
+      if (code === 461 || code === 27 || code === 8) closeUpdate();
+      // after allowing installs, or a failure: OK tries again
+      else if (code === 13 && update && /failed|permission|cancelled/.test(update.state)) startUpdate();
+      return true;
+    }
     if (exec) {
       if (code === 461 || code === 27 || code === 8) { exec = null; return true; }
       return true;
@@ -231,10 +273,16 @@
     K.frame(MAIN.x, MAIN.y, MAIN.w, MAIN.h);
     var sys = rectOf(0, VIEW_COLS);
     sectionLabel('VIEWING', '// ' + K.pad(LINKED) + ' LINKED', GRID_X, MAIN.y + 58);
-    var chipOn = focus.row < 0;
+    var chipOn = focus.row < 0 && chip() === 'setup';
     if (chipOn) { K.frame(CHIP.x, CHIP.y, CHIP.w, CHIP.h, C.cyan); K.brackets(CHIP.x, CHIP.y, CHIP.w, CHIP.h, C.pink, 14, 6); }
     else K.box(CHIP.x, CHIP.y, CHIP.w, CHIP.h, C.lineDim, 2);
     text('SETUP', CHIP.x + CHIP.w / 2, CHIP.y + 30, { size: 22, color: chipOn ? C.white : C.text, spacing: 4, align: 'center' });
+    if (hasUpdate()) {
+      var u = UPDATE_CHIP, upOn = focus.row < 0 && chip() === 'update';
+      if (upOn) { K.frame(u.x, u.y, u.w, u.h, C.amber); K.brackets(u.x, u.y, u.w, u.h, C.pink, 14, 6); }
+      else K.box(u.x, u.y, u.w, u.h, C.amber, 2);
+      text('▲ UPDATE ' + update.latest, u.x + u.w / 2, u.y + 30, { size: 22, color: upOn ? C.white : C.amber, spacing: 4, align: 'center' });
+    }
     sectionLabel('SYSTEMS', '', sys.x, MAIN.y + 58);
     // a dashed rule between the two groups
     var ctx = K.ctx, dx = sys.x - (SPLIT + GAP) / 2;
@@ -267,9 +315,9 @@
     var y = ROW_Y[2] + TILE_H + 40, x = GRID_X, w = MAIN.w - PADX * 2, h = 110;
     K.box(x, y, w, h, C.line, 2);
     var target = itemAt(focus.row, focus.col);
-    var NAMES = { settings: 'SYSTEM SETUP', radar: IATA + ' RADAR', power: 'POWER GRID ' + POWER_AREA, radio: 'COMMS // NTS LIVE', outposts: 'OUTPOST MONITOR',
+    var NAMES = { update: 'SOFTWARE UPDATE', settings: 'SYSTEM SETUP', radar: IATA + ' RADAR', power: 'POWER GRID ' + POWER_AREA, radio: 'COMMS // NTS LIVE', outposts: 'OUTPOST MONITOR',
       teletext: 'TELETEXT // ' + (window.Settings.TELETEXT[SETUP.teletext].short || ''), tv: 'VISUAL FEED // DR', sentry: 'SENTRY // LD 567-C', empty: 'NO CARRIER' };
-    var IDS = { settings: 'CONFIG', radar: 'SCREEN 02', power: 'SCREEN 03', radio: 'BROADCAST RX', outposts: 'REMOTE NET',
+    var IDS = { update: update ? 'V' + update.current + ' ▸ V' + update.latest : '', settings: 'CONFIG', radar: 'SCREEN 02', power: 'SCREEN 03', radio: 'BROADCAST RX', outposts: 'REMOTE NET',
       teletext: window.Settings.TELETEXT[SETUP.teletext].name || 'TELETEXT', tv: 'DR BROADCAST NET', sentry: 'PERIMETER DEFENCE', empty: '----' };
     var name = NAMES[target.kind] || target.item.name;
     var id = IDS[target.kind] || target.item.id;
@@ -277,7 +325,7 @@
     var iw = text('>INQUIRY: ' + name, x + 26, y + 48, io);
     blinks.push({ str: '_', x: x + 26 + iw + 2, y: y + 48, opts: io });
     text('TARGET ID  ' + id.toUpperCase(), x + 26, y + 86, { size: 22, color: C.text, spacing: 2 });
-    var kind = { settings: 'CONFIGURATION', app: 'STREAMING SERVICE', input: 'EXTERNAL SOURCE', power: 'GRID MONITOR', radar: 'TRAFFIC DISPLAY',
+    var kind = { update: 'NEW VERSION', settings: 'CONFIGURATION', app: 'STREAMING SERVICE', input: 'EXTERNAL SOURCE', power: 'GRID MONITOR', radar: 'TRAFFIC DISPLAY',
       radio: 'SIGNAL INTERCEPT', outposts: 'REMOTE FEEDS', teletext: 'TEXT SERVICE', tv: 'LIVE BROADCAST', sentry: 'DEFENCE GRID',
       empty: 'CHANNEL VACANT' }[target.kind];
     text(kind, x + w - 26, y + 48, { size: 22, color: C.amber, spacing: 3, align: 'right' });
@@ -364,6 +412,36 @@
     if (exec.result && age > 3200) exec = null;
   }
 
+  function drawUpdate() {
+    if (!updating) return;
+    var ctx = K.ctx, age = Date.now() - updating.at;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.82)';
+    ctx.fillRect(0, 0, W, K.H);
+    ctx.restore();
+    var w = 860, h = 300, x = (W - w) / 2, y = (K.H - h) / 2;
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(x, y, w, h);
+    K.frame(x, y, w, h, C.amber);
+    var cursor = Math.floor(age / 530) % 2 ? '█' : '';
+    text('>UPDATE V' + update.latest + cursor, x + 50, y + 92, { font: K.TITLE, size: 34, color: C.white, spacing: 4, glow: 12 });
+    text('V' + update.current + ' ▸ V' + update.latest + '  ·  GITHUB RELEASE', x + 50, y + 140, { size: 22, color: C.text, spacing: 2 });
+    var blocks = 24, filled = Math.round(blocks * (update.progress || 0) / 100);
+    for (var i = 0; i < blocks; i++) {
+      var bx = x + 50 + i * 32;
+      if (i < filled) K.fillBar(bx, y + 168, 24, 26, C.amber);
+      else K.box(bx, y + 168, 24, 26, C.lineDim, 2);
+    }
+    var msg = 'REQUESTING TRANSFER...', color = C.text;
+    if (update.state === 'downloading') msg = 'RECEIVING PACKAGE  ' + (update.progress || 0) + '%';
+    // Android closes Ostromo to replace it and doesn't open it again
+    if (update.state === 'installing') { msg = 'CONFIRM · THEN OPEN OSTROMO FROM YOUR APPS'; color = C.green; }
+    if (update.state === 'permission') { msg = 'ALLOW OSTROMO TO INSTALL APPS, THEN OK'; color = C.amber; }
+    if (update.state === 'cancelled') { msg = 'NOT INSTALLED · OK TO TRY AGAIN'; color = C.amber; }
+    if (update.state === 'failed') { msg = (update.error || 'UPDATE FAILED') + ' · OK RETRY'; color = C.red; }
+    K.fitText(msg, x + 50, y + 250, w - 100, { size: 24, color: color, spacing: 3 });
+  }
+
   // everything that only changes per second, per blink or per key press
   // blinking cursors, drawn over the cached layer so the blink doesn't redraw it
   var blinks = [];
@@ -380,7 +458,7 @@
 
   function draw(t, now) {
     var power = window.Power.summary();
-    var key = [focus.row, focus.col, Math.floor(now.getTime() / 1000),
+    var key = [focus.row, focus.col, chip(), hasUpdate(), Math.floor(now.getTime() / 1000),
       power ? power.now.toFixed(2) + power.cheapest : '', window.Radar.flights().length,
       window.Radio.nowPlaying() || ''].join('|');
     K.cached('home', key, function () { drawStill(t, now); });
@@ -390,9 +468,11 @@
     drawGhost();
     drawTicker(t);
     drawExec();
+    drawUpdate();
   }
 
   resolveAppIds();
+  checkUpdate();
 
   window.Home = { draw: draw, key: key };
 })();

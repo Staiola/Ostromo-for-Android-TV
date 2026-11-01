@@ -6,6 +6,7 @@ package com.unterface.ostromo
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
@@ -63,6 +64,12 @@ class MainActivity : Activity() {
         setContentView(web)
         web.requestFocus()
         web.loadUrl("https://${WebViewAssetLoader.DEFAULT_DOMAIN}/index.html")
+    }
+
+    // the installer's answer to an update (Updater)
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action == Updater.ACTION_STATUS) Updater.result(this, intent)
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
